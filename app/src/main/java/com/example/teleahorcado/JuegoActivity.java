@@ -1,8 +1,11 @@
 package com.example.teleahorcado;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.Handler;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
@@ -14,14 +17,17 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Random;
 
 public class JuegoActivity extends AppCompatActivity {
 
     // Variables de la UI
-    private TextView textViewTematica, textViewPalabra;
+    private TextView textViewTematica, textViewPalabra, textViewTiempo, textViewComodin;
     private ImageView imageViewAntena, imageViewCabeza, imageViewTorso,
             imageViewBrazoDerecho, imageViewBrazoIzquierdo,
             imageViewPiernaDerecha, imageViewPiernaIzquierda;
@@ -49,11 +55,8 @@ public class JuegoActivity extends AppCompatActivity {
 
     // Palabras por temática
     private final String[][] palabrasPorTematica = {
-            // Redes
             {"ROUTER", "SWITCH", "GATEWAY", "FIREWALL", "ETHERNET", "WIFI", "TCP", "UDP", "HTTP", "FTP"},
-            // Ciberseguridad
             {"PHISHING", "MALWARE", "ANTIVIRUS", "ENCRYPTION", "HACKER", "VIRUS", "TROJAN", "SPYWARE", "FIREWALL", "PASSWORD"},
-            // Fibra Óptica
             {"FIBRA", "LASER", "OPTICO", "CONNECTOR", "SPLICE", "ATTENUATION", "DISPERSION", "WAVELENGTH", "BANDWIDTH", "CABLE"}
     };
 
@@ -62,23 +65,14 @@ public class JuegoActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_juego);
 
-        // Configurar toolbar
         setupToolbar();
-
-        // Obtener datos del intent
         obtenerDatosIntent();
-
-        // Inicializar vistas
         initViews();
-
-        // Inicializar juego
         inicializarJuego();
-
-        // Configurar eventos
         setupEvents();
 
-        //Iniciar el timer
-        iniciarTimer();
+        // Inicializar SharedPreferences
+        gamePrefs = getSharedPreferences("TeleAhorcadoStats", MODE_PRIVATE);
     }
 
     private void setupToolbar() {
@@ -96,6 +90,8 @@ public class JuegoActivity extends AppCompatActivity {
     private void initViews() {
         textViewTematica = findViewById(R.id.textViewTematica);
         textViewPalabra = findViewById(R.id.textViewPalabra);
+        textViewTiempo = findViewById(R.id.textViewTiempo);
+        textViewComodin = findViewById(R.id.textViewComodin);
 
         imageViewAntena = findViewById(R.id.imageViewAntena);
         imageViewCabeza = findViewById(R.id.imageViewCabeza);
@@ -108,45 +104,65 @@ public class JuegoActivity extends AppCompatActivity {
         gridLetras = findViewById(R.id.gridLetras);
         buttonNuevoJuego = findViewById(R.id.buttonNuevoJuego);
 
-        // Configurar temática
         textViewTematica.setText(tematica);
     }
 
     private void inicializarJuego() {
-        // Resetear variables
         errores = 0;
         juegoTerminado = false;
         letrasIncorrectas = new ArrayList<>();
+        aciertosConsecutivos = 0;
 
-        // Ocultar partes del ahorcado
         ocultarPartesAhorcado();
-
-        // Seleccionar palabra aleatoria
         seleccionarPalabraAleatoria();
-
-        // Crear botones de letras
         crearBotonesLetras();
+        iniciarTimer();
+        actualizarComodin();
+    }
+
+    private void iniciarTimer() {
+        tiempoInicio = System.currentTimeMillis();
+        segundosTranscurridos = 0;
+
+        timerHandler = new Handler();
+        timerRunnable = new Runnable() {
+            @Override
+            public void run() {
+                segundosTranscurridos = (int) ((System.currentTimeMillis() - tiempoInicio) / 1000);
+                textViewTiempo.setText("Tiempo: " + segundosTranscurridos + "s");
+                timerHandler.postDelayed(this, 1000);
+            }
+        };
+        timerHandler.post(timerRunnable);
+    }
+
+    private void detenerTimer() {
+        if (timerHandler != null && timerRunnable != null) {
+            timerHandler.removeCallbacks(timerRunnable);
+        }
+    }
+
+    private void actualizarComodin() {
+        comodinesDisponibles = aciertosConsecutivos / 4;
+        textViewComodin.setText("⭐ " + comodinesDisponibles + "/" + aciertosConsecutivos);
+
+        // Habilitar/deshabilitar clic en comodín
+        textViewComodin.setClickable(comodinesDisponibles > 0);
+        textViewComodin.setAlpha(comodinesDisponibles > 0 ? 1.0f : 0.5f);
     }
 
     private void seleccionarPalabraAleatoria() {
         int indiceTematica = 0;
         switch (tematica) {
-            case "Redes":
-                indiceTematica = 0;
-                break;
-            case "Ciberseguridad":
-                indiceTematica = 1;
-                break;
-            case "Fibra Óptica":
-                indiceTematica = 2;
-                break;
+            case "Redes": indiceTematica = 0; break;
+            case "Ciberseguridad": indiceTematica = 1; break;
+            case "Fibra Óptica": indiceTematica = 2; break;
         }
 
         Random random = new Random();
         String[] palabras = palabrasPorTematica[indiceTematica];
         palabraActual = palabras[random.nextInt(palabras.length)];
 
-        // Crear palabra con guiones
         palabraMostrada = new StringBuilder();
         for (int i = 0; i < palabraActual.length(); i++) {
             palabraMostrada.append("_ ");
@@ -205,6 +221,8 @@ public class JuegoActivity extends AppCompatActivity {
 
         if (letraEncontrada) {
             boton.setBackgroundColor(Color.GREEN);
+            aciertosConsecutivos++;
+            actualizarComodin();
 
             if (!palabraMostrada.toString().contains("_")) {
                 ganarJuego();
@@ -213,9 +231,10 @@ public class JuegoActivity extends AppCompatActivity {
             boton.setBackgroundColor(Color.RED);
             letrasIncorrectas.add(letraChar);
             errores++;
+            aciertosConsecutivos = 0; // Reiniciar contador de aciertos
+            actualizarComodin();
             mostrarParteAhorcado();
 
-            // El ahorcado completo tiene 6 partes: cabeza, torso, brazo der, brazo izq, pierna der, pierna izq
             if (errores >= 6) {
                 perderJuego();
             }
@@ -224,26 +243,63 @@ public class JuegoActivity extends AppCompatActivity {
         textViewPalabra.setText(palabraMostrada.toString().trim());
     }
 
+    private void usarComodin() {
+        if (comodinesDisponibles <= 0 || juegoTerminado) return;
+
+        // Encontrar letras no reveladas
+        List<Character> letrasNoReveladas = new ArrayList<>();
+        for (int i = 0; i < palabraActual.length(); i++) {
+            char letra = palabraActual.charAt(i);
+            if (palabraMostrada.charAt(i * 2) == '_' && !letrasNoReveladas.contains(letra)) {
+                letrasNoReveladas.add(letra);
+            }
+        }
+
+        if (!letrasNoReveladas.isEmpty()) {
+            // Seleccionar letra aleatoria
+            Random random = new Random();
+            char letraRevelada = letrasNoReveladas.get(random.nextInt(letrasNoReveladas.size()));
+
+            // Revelar la letra
+            for (int i = 0; i < palabraActual.length(); i++) {
+                if (palabraActual.charAt(i) == letraRevelada) {
+                    palabraMostrada.setCharAt(i * 2, letraRevelada);
+                }
+            }
+
+            // Desactivar botón correspondiente y marcarlo como usado
+            for (int i = 0; i < gridLetras.getChildCount(); i++) {
+                Button btn = (Button) gridLetras.getChildAt(i);
+                if (btn.getTag().equals(String.valueOf(letraRevelada))) {
+                    btn.setEnabled(false);
+                    btn.setBackgroundColor(Color.YELLOW); // Color especial para comodín
+                    break;
+                }
+            }
+
+            // Reducir comodines disponibles
+            aciertosConsecutivos -= 4;
+            actualizarComodin();
+
+            textViewPalabra.setText(palabraMostrada.toString().trim());
+
+            // Verificar si ganó
+            if (!palabraMostrada.toString().contains("_")) {
+                ganarJuego();
+            }
+
+            Toast.makeText(this, "¡Comodín usado! Letra revelada: " + letraRevelada, Toast.LENGTH_SHORT).show();
+        }
+    }
+
     private void mostrarParteAhorcado() {
         switch (errores) {
-            case 1:
-                imageViewCabeza.setVisibility(View.VISIBLE);
-                break;
-            case 2:
-                imageViewTorso.setVisibility(View.VISIBLE);
-                break;
-            case 3:
-                imageViewBrazoDerecho.setVisibility(View.VISIBLE);
-                break;
-            case 4:
-                imageViewBrazoIzquierdo.setVisibility(View.VISIBLE);
-                break;
-            case 5:
-                imageViewPiernaIzquierda.setVisibility(View.VISIBLE);
-                break;
-            case 6:
-                imageViewPiernaDerecha.setVisibility(View.VISIBLE);
-                break;
+            case 1: imageViewCabeza.setVisibility(View.VISIBLE); break;
+            case 2: imageViewTorso.setVisibility(View.VISIBLE); break;
+            case 3: imageViewBrazoDerecho.setVisibility(View.VISIBLE); break;
+            case 4: imageViewBrazoIzquierdo.setVisibility(View.VISIBLE); break;
+            case 5: imageViewPiernaIzquierda.setVisibility(View.VISIBLE); break;
+            case 6: imageViewPiernaDerecha.setVisibility(View.VISIBLE); break;
         }
     }
 
@@ -258,15 +314,51 @@ public class JuegoActivity extends AppCompatActivity {
 
     private void ganarJuego() {
         juegoTerminado = true;
-        Toast.makeText(this, "¡Felicidades " + nombreUsuario + "! ¡Ganaste!", Toast.LENGTH_LONG).show();
+        detenerTimer();
+
+        textViewTiempo.setTextColor(Color.GREEN);
+        textViewTiempo.setText("Ganó / Tiempo: " + segundosTranscurridos + "s");
+
+        guardarEstadistica(true);
         buttonNuevoJuego.setVisibility(View.VISIBLE);
+
+        Toast.makeText(this, "¡Felicidades " + nombreUsuario + "! ¡Ganaste!", Toast.LENGTH_LONG).show();
     }
 
     private void perderJuego() {
         juegoTerminado = true;
+        detenerTimer();
+
         textViewPalabra.setText(palabraActual);
-        Toast.makeText(this, "¡Perdiste! La palabra era: " + palabraActual, Toast.LENGTH_LONG).show();
+        textViewTiempo.setTextColor(Color.RED);
+        textViewTiempo.setText("Perdió / Tiempo: " + segundosTranscurridos + "s");
+
+        guardarEstadistica(false);
         buttonNuevoJuego.setVisibility(View.VISIBLE);
+
+        Toast.makeText(this, "¡Perdiste! La palabra era: " + palabraActual, Toast.LENGTH_LONG).show();
+    }
+
+    private void guardarEstadistica(boolean gano) {
+        // Guardar estadística del juego
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy - HH:mm", Locale.getDefault());
+        String fechaHora = sdf.format(new Date());
+
+        SharedPreferences.Editor editor = gamePrefs.edit();
+
+        // Incrementar contador de partidas
+        int totalPartidas = gamePrefs.getInt("total_partidas", 0) + 1;
+        editor.putInt("total_partidas", totalPartidas);
+
+        // Guardar partida individual
+        String resultado = gano ? "Ganó" : "Perdió";
+        String partidaInfo = "Juego " + totalPartidas + ": " + resultado + " / Tiempo: " + segundosTranscurridos + "s";
+        editor.putString("partida_" + totalPartidas, partidaInfo);
+        editor.putString("fecha_" + totalPartidas, fechaHora);
+        editor.putBoolean("gano_" + totalPartidas, gano);
+        editor.putInt("tiempo_" + totalPartidas, segundosTranscurridos);
+
+        editor.apply();
     }
 
     private void setupEvents() {
@@ -277,45 +369,48 @@ public class JuegoActivity extends AppCompatActivity {
                 inicializarJuego();
             }
         });
+
+        textViewComodin.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                usarComodin();
+            }
+        });
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_juego, menu);
+        return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == android.R.id.home) {
+        int id = item.getItemId();
+
+        if (id == android.R.id.home) {
+            detenerTimer();
             finish();
             return true;
+        } else if (id == R.id.action_estadisticas) {
+            Intent intent = new Intent(this, EstadisticasActivity.class);
+            intent.putExtra("nombre_usuario", nombreUsuario);
+            startActivity(intent);
+            return true;
         }
+
         return super.onOptionsItemSelected(item);
     }
 
-    private void iniciarTimer() {
-        tiempoInicio = System.currentTimeMillis();
-        segundosTranscurridos = 0;
-
-        timerHandler = new Handler();
-        timerRunnable = new Runnable() {
-            @Override
-            public void run() {
-                segundosTranscurridos = (int) ((System.currentTimeMillis() - tiempoInicio) / 1000);
-                textViewTiempo.setText("Tiempo: " + segundosTranscurridos + "s");
-                timerHandler.postDelayed(this, 1000);
-            }
-        };
-        timerHandler.post(timerRunnable);
+    @Override
+    protected void onDestroy() {
+        detenerTimer();
+        super.onDestroy();
     }
 
-    private void detenerTimer() {
-        if (timerHandler != null && timerRunnable != null) {
-            timerHandler.removeCallbacks(timerRunnable);
-        }
-    }
-
-    private void actualizarComodin() {
-        comodinesDisponibles = aciertosConsecutivos / 4;
-        textViewComodin.setText("⭐ " + comodinesDisponibles + "/" + aciertosConsecutivos);
-
-        // Habilitar/deshabilitar clic en comodín
-        textViewComodin.setClickable(comodinesDisponibles > 0);
-        textViewComodin.setAlpha(comodinesDisponibles > 0 ? 1.0f : 0.5f);
+    @Override
+    protected void onPause() {
+        super.onPause();
+        // No detener el timer en pausa, mantener corriendo
     }
 }
