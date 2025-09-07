@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/background_color">
+
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="@color/primary_color"
+        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <!-- Solo temática -->
+            <TextView
+                android:id="@+id/textViewTematica"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Ciberseguridad"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:layout_gravity="center"
+                android:layout_marginBottom="16dp"
+                android:textColor="@color/title_color" />
+
+            <!-- Container de la antena y ahorcado -->
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="250dp"
+                android:layout_marginBottom="16dp">
+
+                <!-- Antena de fondo -->
+                <ImageView
+                    android:id="@+id/imageViewAntena"
+                    android:layout_width="150dp"
+                    android:layout_height="200dp"
+                    android:src="@drawable/antenna_sin_fondo"
+                    android:layout_gravity="center"
+                    android:contentDescription="Antena de telecomunicaciones" />
+
+                <!-- 1. Cabeza -->
+                <ImageView
+                    android:id="@+id/imageViewCabeza"
+                    android:layout_width="25dp"
+                    android:layout_height="25dp"
+                    android:src="@drawable/head1_sin_fondo"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginTop="30dp"
+                    android:visibility="invisible"
+                    android:contentDescription="Cabeza" />
+
+                <!-- 2. Torso -->
+                <ImageView
+                    android:id="@+id/imageViewTorso"
+                    android:layout_width="20dp"
+                    android:layout_height="50dp"
+                    android:src="@drawable/torso_sin_fondo"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginTop="55dp"
+                    android:visibility="invisible"
+                    android:contentDescription="Torso" />
+
+                <!-- 3. Brazo Derecho (usar la imagen del brazo izquierdo) -->
+                <ImageView
+                    android:id="@+id/imageViewBrazoDerecho"
+                    android:layout_width="25dp"
+                    android:layout_height="25dp"
+                    android:src="@drawable/brazo_dere_pierna_izq_sin_fondo"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginTop="70dp"
+                    android:layout_marginStart="15dp"
+                    android:visibility="invisible"
+                    android:contentDescription="Brazo derecho" />
+
+                <!-- 4. Brazo Izquierdo (usar la imagen del brazo derecho) -->
+                <ImageView
+                    android:id="@+id/imageViewBrazoIzquierdo"
+                    android:layout_width="25dp"
+                    android:layout_height="25dp"
+                    android:src="@drawable/brazo_izq_pierna_dere_sin_fondo"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginTop="70dp"
+                    android:layout_marginEnd="15dp"
+                    android:visibility="invisible"
+                    android:contentDescription="Brazo izquierdo" />
+
+                <!-- 5. Pierna Izquierda (del lado izquierdo del muñeco, derecho de la pantalla) -->
+                <ImageView
+                    android:id="@+id/imageViewPiernaIzquierda"
+                    android:layout_width="25dp"
+                    android:layout_height="25dp"
+                    android:src="@drawable/brazo_izq_pierna_dere_sin_fondo"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginTop="100dp"
+                    android:layout_marginStart="8dp"
+                    android:visibility="invisible"
+                    android:contentDescription="Pierna izquierda" />
+
+                <!-- 6. Pierna Derecha (del lado derecho del muñeco, izquierdo de la pantalla) -->
+                <ImageView
+                    android:id="@+id/imageViewPiernaDerecha"
+                    android:layout_width="25dp"
+                    android:layout_height="25dp"
+                    android:src="@drawable/brazo_dere_pierna_izq_sin_fondo"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginTop="100dp"
+                    android:layout_marginEnd="8dp"
+                    android:visibility="invisible"
+                    android:contentDescription="Pierna derecha" />
+
+            </FrameLayout>
+
+            <!-- Palabra a adivinar -->
+            <TextView
+                android:id="@+id/textViewPalabra"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="_ _ _ _ _"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:layout_gravity="center"
+                android:layout_marginBottom="24dp"
+                android:letterSpacing="0.1" />
+
+            <!-- Grid de letras -->
+            <GridLayout
+                android:id="@+id/gridLetras"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:columnCount="7"
+                android:rowCount="4"
+                android:layout_gravity="center"
+                android:layout_marginBottom="16dp" />
+
+            <!-- Botón Nuevo Juego -->
+            <Button
+                android:id="@+id/buttonNuevoJuego"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Nuevo Juego"
+                android:layout_gravity="center"
+                android:background="@drawable/button_background"
+                android:textColor="@android:color/white"
+                android:visibility="gone" />
+
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>

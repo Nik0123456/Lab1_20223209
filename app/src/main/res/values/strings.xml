@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">TeleAhorcado</string>
+    <string name="bienvenido">Bienvenido</string>
+    <string name="ingresar_nombre">Ingresar Nombre</string>
+    <string name="jugar">Jugar</string>
+    <string name="seleccione_tematica">Seleccione una temática:</string>
+    <string name="redes">Redes</string>
+    <string name="ciberseguridad">Ciberseguridad</string>
+    <string name="fibra_optica">Fibra Óptica</string>
+    <string name="nuevo_juego">Nuevo Juego</string>
+    <string name="tiempo">Tiempo: %1$ds</string>
+    <string name="score_format">%1$d/2</string>
+    <string name="estadisticas">Ver perfil y estadísticas</string>
+</resources>

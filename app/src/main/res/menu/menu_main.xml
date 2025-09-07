@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/action_estadisticas"
+        android:title="@string/estadisticas"
+        android:icon="@drawable/ic_stats"
+        app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/action_cambiar_color"
+        android:title="Cambiar Color"
+        app:showAsAction="never" />
+
+</menu>
